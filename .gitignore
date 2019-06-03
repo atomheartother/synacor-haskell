@@ -1,0 +1,4 @@
+challenge.bin
+*.o
+*.hi
+main
