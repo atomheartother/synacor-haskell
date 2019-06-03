@@ -47,10 +47,10 @@ getArg h = do
 
 -- Takes an opCode and argCount and forms an Instruction object
 makeInstruction :: Handle -> Int -> Maybe Int -> IO Instruction
-makeInstruction _ _ Nothing = return (Instruction {opCode = -1, args = []})
+makeInstruction _ _ Nothing = return Instruction {opCode = -1, args = []}
 makeInstruction h opCode (Just argCount) = do
     args <- mapM getArg [h | _ <- [1..argCount]]
-    return (Instruction {opCode = opCode, args = args })
+    return Instruction {opCode = opCode, args = args }
 
 -- Takes a file handle and returns the next instruction
 nextInstruction :: Handle -> IO Instruction
