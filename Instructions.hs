@@ -60,9 +60,8 @@ getArg h = do
     return (Char.ord hi * 256 + Char.ord lo)
 
 -- Takes an instruction and a vm state and returns an invocation object
-makeInvocation :: Handle -> VM.VMState -> Int -> Maybe Instruction -> IO Invocation
-makeInvocation _ _ opCode Nothing = error ("Unknown opCode provided: " ++ show opCode)
-makeInvocation h vm opCode (Just i) = do
+makeInvocation :: Handle -> VM.VMState -> Instruction -> IO Invocation
+makeInvocation h vm i = do
     args <- mapM getArg [h | _ <- [1..(argCount i)]]
     return ((with i) h vm args)
 
@@ -70,4 +69,6 @@ makeInvocation h vm opCode (Just i) = do
 nextInstruction :: Handle -> VM.VMState -> IO Invocation
 nextInstruction h vm = do
     opCode <- getArg h
-    makeInvocation h vm opCode (Map.lookup opCode opCodeToInstruction)
+    case (Map.lookup opCode opCodeToInstruction) of
+        Nothing -> error ("Unknown opCode provided: " ++ show opCode)
+        (Just instruction) -> makeInvocation h vm instruction
