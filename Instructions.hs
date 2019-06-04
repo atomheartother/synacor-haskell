@@ -36,9 +36,13 @@ opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
         buildInstruction exit 0 0,
         buildInstruction set 1 2,
+        buildInstruction push 2 1,
+        buildInstruction pop 3 1,
+        buildInstruction eq 4 3,
         buildInstruction jmp 6 1,
         buildInstruction jt 7 2,
         buildInstruction jf 8 2,
+        buildInstruction add 9 3,
         buildInstruction out 19 1,
         buildInstruction noop 21 0
     ]

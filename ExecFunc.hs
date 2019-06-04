@@ -2,14 +2,19 @@ module ExecFunc(
     ExecFuncType,
     exit,
     set,
+    eq,
     out,
     noop,
     jmp,
     jt,
-    jf
+    jf,
+    add,
+    push,
+    pop
 ) where
 
 import System.IO
+import Debug.Trace
 import qualified Data.Char as Char
 import qualified VM as VM
 
@@ -24,8 +29,23 @@ set _ vm [] = error "set with no args"
 set _ vm [x] = error "set with one arg instead of two"
 set _ vm (x:y:xs) = return (VM.set vm a b)
     where
-        a = x
-        b = VM.get vm y
+        a = VM.lval x
+        b = VM.rval vm y
+
+push  :: ExecFuncType
+push _ vm (x:xs) = return (VM.push vm a) where a = VM.rval vm x
+
+pop  :: ExecFuncType
+pop _ vm (x:xs) = return (VM.pop vm a) where a = VM.lval x
+
+eq :: ExecFuncType
+eq _ vm (x:y:z:xs)
+        | b == c = return (VM.set vm a 1)
+        | otherwise = return vm
+        where
+            a = VM.lval x
+            b = VM.rval vm y
+            c = VM.rval vm z
 
 seek :: Handle -> Int -> IO ()
 seek h address = hSeek h AbsoluteSeek $ seekIdx
@@ -37,23 +57,29 @@ jmp h vm (x:xs) = do
     seek h address
     return vm
     where
-        address = VM.get vm x
+        address = VM.rval vm x
 
 jt :: ExecFuncType
 jt _ _ [] = error "jt with no args"
 jt h vm (x:xs)
     | val /= 0 = jmp h vm xs
     | otherwise = return vm
-    where val = VM.get vm x
+    where val = VM.rval vm x
 
 jf :: ExecFuncType
 jf _ _ [] = error "jf with no args"
 jf h vm (x:xs)
     | val == 0 = jmp h vm xs
     | otherwise = return vm
-    where val = VM.get vm x
+    where val = VM.rval vm x
     
-    
+add :: ExecFuncType
+add h vm (x:y:z:xs) = return (VM.set vm a (b+c))
+    where
+        a = VM.lval x
+        b = VM.rval vm y
+        c = VM.rval vm z
+
 out :: ExecFuncType
 out _ _ [] = error "out with no args"
 out _ vm (x:args) = do
