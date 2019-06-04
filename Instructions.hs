@@ -62,13 +62,13 @@ getArg h = do
     return (Char.ord hi * 256 + Char.ord lo)
 
 -- Takes an instruction and a vm state and returns an invocation object
-makeInvocation :: Handle -> VM.VMState -> Instruction -> Invocation
+makeInvocation :: Handle -> VM.VMState -> Instruction -> IO Invocation
 makeInvocation h vm i = do
     args <- mapM getArg [h | _ <- [1..(argCount i)]]
-    (with i) h vm args
+    return ((with i) h vm args)
 
 -- Takes a file handle and returns the next instruction with proper args bound
-nextInstruction :: Handle -> VM.VMState -> Invocation
+nextInstruction :: Handle -> VM.VMState -> IO Invocation
 nextInstruction h vm = do
     opCode <- getArg h
     case (Map.lookup opCode opCodeToInstruction) of
