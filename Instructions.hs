@@ -1,43 +1,57 @@
 module Instructions(
     Instruction(..),
+    Invocation(..),
     nextInstruction
 ) where
 
 import System.IO
 import qualified Data.Map as Map  
 import qualified Data.Char as Char
+import qualified VM as VM
 
+-- Represents an instruction.
+-- Can provide an invocation of it if provided with a handle and a VMState
 data Instruction = Instruction {
-    opCode  :: Int,
-    args    :: [Int]
-} deriving (Show)
+    opCode      :: Int,
+    argCount    :: Int,
+    with        :: Handle -> VM.VMState -> [Int] -> Invocation
+}
 
-opCodeToArgCount :: Map.Map Int Int
-opCodeToArgCount = Map.fromList [
-    (0, 0),
-    (1, 2),
-    (2, 1),
-    (3, 1),
-    (4, 3),
-    (5, 3),
-    (6, 1),
-    (7, 2),
-    (8, 2),
-    (9, 3),
-    (10, 3),
-    (11, 3),
-    (12, 3),
-    (13, 3),
-    (14, 2),
-    (15, 2),
-    (16, 2),
-    (17, 1),
-    (18, 0),
-    (19, 1),
-    (20, 1),
-    (21, 0)]
+-- Represents a specific invocation of an instruction
+-- For the same handle and vm state, will give the same result
+data Invocation = Invocation {
+    op      :: Int,         -- Opcode
+    h       :: Handle,      -- File handle
+    vm      :: VM.VMState,  -- VM state
+    exec    :: IO VM.VMState
+}
 
--- Read the next 2 bytes and puts them in an int
+opCodeToInstruction :: Map.Map Int Instruction
+opCodeToInstruction = Map.fromList [
+    -- (0,  Instruction 0 0 Nothing),
+    -- (1,  Instruction 1 2 Nothing),
+    -- (2,  Instruction 2 1 Nothing),
+    -- (3,  Instruction 3 1 Nothing),
+    -- (4,  Instruction 4 3 Nothing),
+    -- (5,  Instruction 5 3 Nothing),
+    -- (6,  Instruction 6 1 Nothing),
+    -- (7,  Instruction 7 2 Nothing),
+    -- (8,  Instruction 8 2 Nothing),
+    -- (9,  Instruction 9 3 Nothing),
+    -- (10, Instruction 10 3 Nothing),
+    -- (11, Instruction 11 3 Nothing),
+    -- (12, Instruction 12 3 Nothing),
+    -- (13, Instruction 13 3 Nothing),
+    -- (14, Instruction 14 2 Nothing),
+    -- (15, Instruction 15 2 Nothing),
+    -- (16, Instruction 16 2 Nothing),
+    -- (17, Instruction 17 1 Nothing),
+    -- (18, Instruction 18 0 Nothing),
+    -- (19, Instruction 19 1 Nothing),
+    -- (20, Instruction 20 1 Nothing),
+    (21, Instruction 21 0 (\h -> \vm -> \args -> Invocation {op=21, h=h, vm=vm, exec = return vm}))] -- Noop
+
+-- Read the next 2 bytes and put them in an int
 getArg :: Handle -> IO Int
 getArg h = do
     lo <- hGetChar h
@@ -45,15 +59,15 @@ getArg h = do
     hi <- if not done then hGetChar h else return '\0'
     return (Char.ord hi * 256 + Char.ord lo)
 
--- Takes an opCode and argCount and forms an Instruction object
-makeInstruction :: Handle -> Int -> Maybe Int -> IO Instruction
-makeInstruction _ _ Nothing = return Instruction {opCode = -1, args = []}
-makeInstruction h opCode (Just argCount) = do
-    args <- mapM getArg [h | _ <- [1..argCount]]
-    return Instruction {opCode = opCode, args = args }
+-- Takes an instruction and a vm state and returns an invocation object
+makeInvocation :: Handle -> VM.VMState -> Int -> Maybe Instruction -> IO Invocation
+makeInvocation _ _ opCode Nothing = error ("Unknown opCode provided: " ++ show opCode)
+makeInvocation h vm opCode (Just i) = do
+    args <- mapM getArg [h | _ <- [1..(argCount i)]]
+    return ((with i) h vm args)
 
--- Takes a file handle and returns the next instruction
-nextInstruction :: Handle -> IO Instruction
-nextInstruction h = do
+-- Takes a file handle and returns the next instruction with proper args bound
+nextInstruction :: Handle -> VM.VMState -> IO Invocation
+nextInstruction h vm = do
     opCode <- getArg h
-    makeInstruction h opCode (Map.lookup opCode opCodeToArgCount)
+    makeInvocation h vm opCode (Map.lookup opCode opCodeToInstruction)

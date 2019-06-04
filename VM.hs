@@ -1,8 +1,11 @@
 module VM(
     VMState(..),
     get,
-    set
+    set,
+    new
 ) where
+
+import Data.List
 
 -- 8 registers
 type Registers = [Int]
@@ -12,6 +15,9 @@ data VMState = VMState {
     stack       :: [Int],
     registers   :: Registers
 }
+
+new :: VMState
+new = VMState {stack = [], registers = replicate 8 0}
 
 get :: VMState -> Int -> Int
 get vm n
