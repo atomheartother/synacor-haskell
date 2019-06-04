@@ -2,7 +2,8 @@ module VM(
     VMState(..),
     get,
     set,
-    new
+    new,
+    exit
 ) where
 
 import Data.List
@@ -13,11 +14,12 @@ type Registers = [Int]
 -- VM State contains a stack plus registers
 data VMState = VMState {
     stack       :: [Int],
-    registers   :: Registers
+    registers   :: Registers,
+    close       :: Bool
 }
 
 new :: VMState
-new = VMState {stack = [], registers = replicate 8 0}
+new = VMState {stack = [], registers = replicate 8 0, close=False}
 
 -- Value has to be a valid register value
 regCodeToIdx :: Int -> Int
@@ -39,11 +41,14 @@ replaceNth n newVal (x:xs)
     
 -- Set a register value
 set :: VMState -> Int -> Int -> VMState
-set vm n val= VMState {stack = stack vm, registers = replaceNth (regCodeToIdx n) val (registers vm) }
+set vm n val= VMState {stack = stack vm, registers = replaceNth (regCodeToIdx n) val (registers vm), close = close vm }
 
 pop :: VMState -> Int -> VMState
 pop VMState{stack=[]} _ = error "Trying to pop an empty stack"
-pop VMState{stack=x:xs, registers=registers} reg = VMState{stack=xs, registers= replaceNth (regCodeToIdx reg) x registers }
+pop VMState{stack=x:xs, registers=registers, close=close} reg = VMState{stack=xs, registers= replaceNth (regCodeToIdx reg) x registers, close = close}
 
 push :: VMState -> Int -> VMState
-push vm val = VMState{stack = stack vm, registers = val:registers vm}
+push vm val = VMState{stack = stack vm, registers = val:registers vm, close = close vm}
+
+exit :: VMState -> VMState
+exit vm = VMState{stack = stack vm, registers = registers vm, close = True}
