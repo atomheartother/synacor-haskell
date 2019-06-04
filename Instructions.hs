@@ -49,7 +49,7 @@ opCodeToInstruction = Map.fromList [
     -- (18, Instruction 18 0 Nothing),
     (19, Instruction 19 1 (\h -> \vm -> \args -> do
         putChar $ Char.chr $ args !! 0
-        return Invocation {op=21, h=h, vm=vm, exec = vm})),
+        return Invocation {op=19, h=h, vm=vm, exec = vm})),
     -- (20, Instruction 20 1 Nothing),
     (21, Instruction 21 0 (\h -> \vm -> \args -> return Invocation {op=21, h=h, vm=vm, exec = vm}))] -- Noop
 
