@@ -26,9 +26,30 @@ data Invocation = Invocation {
     exec    :: IO VM.VMState   -- VM state after execution
 }
 
+-- Typedef for exec functions
+type ExecFunc = Handle -> VM.VMState -> [Int] -> IO VM.VMState
+
+-- exit function
+exit :: ExecFunc
+exit _ vm _ = return $ VM.exit vm
+
+-- out function
+out :: ExecFunc
+out _ vm args = do
+    putChar $ Char.chr $ args !! 0
+    return vm
+
+-- noop function
+noop :: ExecFunc
+noop _ vm _ = return vm
+
+-- Helper function to build the instruction dict
+buildInstruction :: ExecFunc -> Int -> Int -> (Int, Instruction)
+buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -> \vm -> \args -> Invocation {op=0, h=h, vm=vm, exec = f h vm args}))
+
 opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
-    (0,  Instruction 0 0 (\h -> \vm -> \args -> Invocation {op=0, h=h, vm=vm, exec = return (VM.exit vm)})),
+    buildInstruction exit 0 0,
     -- (1,  Instruction 1 2 Nothing),
     -- (2,  Instruction 2 1 Nothing),
     -- (3,  Instruction 3 1 Nothing),
@@ -47,11 +68,9 @@ opCodeToInstruction = Map.fromList [
     -- (16, Instruction 16 2 Nothing),
     -- (17, Instruction 17 1 Nothing),
     -- (18, Instruction 18 0 Nothing),
-    (19, Instruction 19 1 (\h -> \vm -> \args -> Invocation {op=19, h=h, vm=vm, exec = do
-            putChar $ Char.chr $ args !! 0
-            return vm})),
+    buildInstruction out 19 1,
     -- (20, Instruction 20 1 Nothing),
-    (21, Instruction 21 0 (\h -> \vm -> \args -> Invocation {op=21, h=h, vm=vm, exec = return vm}))] -- Noop
+    buildInstruction noop 21 0]
 
 -- Read the next 2 bytes and put them in an int
 getArg :: Handle -> IO Int
