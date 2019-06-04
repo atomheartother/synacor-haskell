@@ -23,17 +23,19 @@ data Instruction = Instruction {
 data Invocation = Invocation {
     op      :: Int,         -- Opcode
     h       :: Handle,      -- File handle
+    args    :: [Int],       -- Arguments
     vm      :: VM.VMState,  -- VM state before execution
     exec    :: IO VM.VMState   -- VM state after execution
 }
 
 -- Helper function to build the instruction dict
 buildInstruction :: ExecFuncType -> Int -> Int -> (Int, Instruction)
-buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -> \vm -> \args -> Invocation {op=0, h=h, vm=vm, exec = f h vm args}))
+buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -> \vm -> \args -> Invocation {op=opCode, h=h, vm=vm, args=args, exec = f h vm args}))
 
 opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
         buildInstruction exit 0 0,
+        buildInstruction jmp 6 1,
         buildInstruction out 19 1,
         buildInstruction noop 21 0
     ]
