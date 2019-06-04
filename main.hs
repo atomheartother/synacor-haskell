@@ -1,5 +1,6 @@
 import System.IO
 import Instructions
+import VM
 
 printInstructions:: Handle -> IO ()
 printInstructions h = do
