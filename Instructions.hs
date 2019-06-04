@@ -5,9 +5,10 @@ module Instructions(
 ) where
 
 import System.IO
-import qualified Data.Map as Map  
+import qualified Data.Map as Map
 import qualified Data.Char as Char
 import qualified VM as VM
+import ExecFunc
 
 -- Represents an instruction.
 -- Can provide an invocation of it if provided with a handle and a VMState
@@ -26,25 +27,8 @@ data Invocation = Invocation {
     exec    :: IO VM.VMState   -- VM state after execution
 }
 
--- Typedef for exec functions
-type ExecFunc = Handle -> VM.VMState -> [Int] -> IO VM.VMState
-
--- exit function
-exit :: ExecFunc
-exit _ vm _ = return $ VM.exit vm
-
--- out function
-out :: ExecFunc
-out _ vm args = do
-    putChar $ Char.chr $ args !! 0
-    return vm
-
--- noop function
-noop :: ExecFunc
-noop _ vm _ = return vm
-
 -- Helper function to build the instruction dict
-buildInstruction :: ExecFunc -> Int -> Int -> (Int, Instruction)
+buildInstruction :: ExecFuncType -> Int -> Int -> (Int, Instruction)
 buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -> \vm -> \args -> Invocation {op=0, h=h, vm=vm, exec = f h vm args}))
 
 opCodeToInstruction :: Map.Map Int Instruction
