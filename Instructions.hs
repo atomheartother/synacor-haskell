@@ -33,28 +33,10 @@ buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -
 
 opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
-    buildInstruction exit 0 0,
-    -- (1,  Instruction 1 2 Nothing),
-    -- (2,  Instruction 2 1 Nothing),
-    -- (3,  Instruction 3 1 Nothing),
-    -- (4,  Instruction 4 3 Nothing),
-    -- (5,  Instruction 5 3 Nothing),
-    -- (6,  Instruction 6 1 Nothing),
-    -- (7,  Instruction 7 2 Nothing),
-    -- (8,  Instruction 8 2 Nothing),
-    -- (9,  Instruction 9 3 Nothing),
-    -- (10, Instruction 10 3 Nothing),
-    -- (11, Instruction 11 3 Nothing),
-    -- (12, Instruction 12 3 Nothing),
-    -- (13, Instruction 13 3 Nothing),
-    -- (14, Instruction 14 2 Nothing),
-    -- (15, Instruction 15 2 Nothing),
-    -- (16, Instruction 16 2 Nothing),
-    -- (17, Instruction 17 1 Nothing),
-    -- (18, Instruction 18 0 Nothing),
-    buildInstruction out 19 1,
-    -- (20, Instruction 20 1 Nothing),
-    buildInstruction noop 21 0]
+        buildInstruction exit 0 0,
+        buildInstruction out 19 1,
+        buildInstruction noop 21 0
+    ]
 
 -- Read the next 2 bytes and put them in an int
 getArg :: Handle -> IO Int
