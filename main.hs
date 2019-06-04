@@ -9,9 +9,9 @@ runVm h vm = do
     if done then return () -- File is done
     else do
         i <- nextInstruction h vm   -- Grab the next instruction
-        -- putStrLn (show (op i) ++ ", args: " ++ show (args i))
+        putStrLn (show (op i) ++ ", args: " ++ show (args i))
         newVm <- exec i
-        runVm h vm               -- Run the vm with the new state
+        runVm h newVm               -- Run the vm with the new state
 
 main:: IO ()
 main = do
