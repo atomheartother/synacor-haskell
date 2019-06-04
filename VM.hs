@@ -25,6 +25,10 @@ get vm n
     | n < 32768 = n
     | otherwise = registers vm !! (n - 32768)
 
+
+regCodeToIdx :: Int -> Int
+regCodeToIdx reg = reg - 32768
+
 replaceNth :: Int -> a -> [a] -> [a]
 replaceNth _ _ [] = []
 replaceNth n newVal (x:xs)
@@ -36,4 +40,11 @@ set :: VMState -> Int -> Int -> VMState
 set vm n val
     | n >= 32776 = error "lvalue out of bounds"
     | n < 32768 = error "Can't use an integer as an lvalue"
-    | otherwise = VMState {stack = stack vm, registers = replaceNth (n - 32768) val (registers vm) }
+    | otherwise = VMState {stack = stack vm, registers = replaceNth (regCodeToIdx n) val (registers vm) }
+
+pop :: VMState -> Int -> VMState
+pop VMState{stack=[]} _ = error "Trying to pop an empty stack"
+pop VMState{stack=x:xs, registers=registers} reg = VMState{stack=xs, registers= replaceNth (regCodeToIdx reg) x registers }
+
+push :: VMState -> Int -> VMState
+push vm val = VMState{stack = stack vm, registers = val:registers vm}
