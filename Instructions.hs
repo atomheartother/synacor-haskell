@@ -4,7 +4,6 @@ module Instructions(
     nextInstruction
 ) where
 
-import System.IO
 import qualified Data.Map as Map
 import qualified Data.Char as Char
 import qualified VM as VM
@@ -15,14 +14,13 @@ import ExecFunc
 data Instruction = Instruction {
     opCode      :: Int,
     argCount    :: Int,
-    with        :: Handle -> VM.VMState -> [Int] -> Invocation
+    with        :: VM.VMState -> [Int] -> Invocation
 }
 
 -- Represents a specific invocation of an instruction
 -- For the same handle and vm state, will give the same result
 data Invocation = Invocation {
     op      :: Int,         -- Opcode
-    h       :: Handle,      -- File handle
     args    :: [Int],       -- Arguments
     vm      :: VM.VMState,  -- VM state before execution
     exec    :: IO VM.VMState   -- VM state after execution
@@ -30,7 +28,7 @@ data Invocation = Invocation {
 
 -- Helper function to build the instruction dict
 buildInstruction :: ExecFuncType -> Int -> Int -> (Int, Instruction)
-buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\h -> \vm -> \args -> Invocation {op=opCode, h=h, vm=vm, args=args, exec = f h vm args}))
+buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\vm -> \args -> Invocation {op=opCode, vm=vm, args=args, exec = f vm args}))
 
 opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
@@ -47,24 +45,14 @@ opCodeToInstruction = Map.fromList [
         buildInstruction noop 21 0
     ]
 
--- Read the next 2 bytes and put them in an int
-getArg :: Handle -> IO Int
-getArg h = do
-    lo <- hGetChar h
-    done <- hIsEOF h
-    hi <- if not done then hGetChar h else return '\0'
-    return (Char.ord hi * 256 + Char.ord lo)
-
 -- Takes an instruction and a vm state and returns an invocation object
-makeInvocation :: Handle -> VM.VMState -> Instruction -> IO Invocation
-makeInvocation h vm i = do
-    args <- mapM getArg [h | _ <- [1..(argCount i)]]
-    return ((with i) h vm args)
+makeInvocation :: VM.VMState -> Instruction -> Invocation
+makeInvocation vm i = (with i) nextVm args where (args, nextVm) = VM.getVals vm (argCount i)
 
--- Takes a file handle and returns the next instruction with proper args bound
-nextInstruction :: Handle -> VM.VMState -> IO Invocation
-nextInstruction h vm = do
-    opCode <- getArg h
-    case (Map.lookup opCode opCodeToInstruction) of
+-- Takes a vm state and returns the next VM state
+nextInstruction :: VM.VMState -> Invocation
+nextInstruction vm = case (Map.lookup opCode opCodeToInstruction) of
         Nothing -> error ("Unknown opCode provided: " ++ show opCode)
-        (Just instruction) -> makeInvocation h vm instruction
+        (Just instruction) -> makeInvocation nextVm instruction
+        where
+            (opCode, nextVm) = VM.getVal vm
