@@ -22,8 +22,8 @@ import Debug.Trace
 type Registers = S.Seq Int
 type Memory = S.Seq Char
 
-MAX_INT_SIZE = 32768
-REGISTER_COUNT = 8
+maxIntSize = 32768
+registerCount = 8
 
 -- VM State contains a stack plus registers
 data VMState = VMState {
@@ -35,7 +35,7 @@ data VMState = VMState {
 }
 
 new :: [Char] -> VMState
-new mem = VMState {stack = [], registers = S.replicate REGISTER_COUNT 0, memory = S.fromList mem, close = False, ri=0}
+new mem = VMState {stack = [], registers = S.replicate registerCount 0, memory = S.fromList mem, close = False, ri=0}
 
 memSize :: VMState -> Int
 memSize vm = S.length $ memory vm
@@ -59,18 +59,18 @@ getRegVal vm idx = S.index (registers vm) idx
 -- Return a register index given a register code
 lval :: Int -> Int
 lval reg
-    | reg < MAX_INT_SIZE = error ("lval must be in register address range: " ++ show reg)
-    | reg > MAX_INT_SIZE + REGISTER_COUNT - 1 = error ("lval address out of bounds: " ++ show reg)
-    | otherwise = reg - MAX_INT_SIZE
+    | reg < maxIntSize = error ("lval must be in register address range: " ++ show reg)
+    | reg > maxIntSize + registerCount - 1 = error ("lval address out of bounds: " ++ show reg)
+    | otherwise = reg - maxIntSize
 
 rval :: VMState -> Int -> Int
 rval vm n
-    | n < MAX_INT_SIZE = n -- Raw value
+    | n < maxIntSize = n -- Raw value
     | otherwise = getRegVal vm (lval n) -- Register value
     
 -- Set a register value
 set :: VMState -> Int -> Int -> VMState
-set vm reg val= VMState {stack = stack vm, registers = S.update reg (val `mod` MAX_INT_SIZE) (registers vm), close = close vm, memory = memory vm , ri = ri vm }
+set vm reg val= VMState {stack = stack vm, registers = S.update reg (val `mod` maxIntSize) (registers vm), close = close vm, memory = memory vm , ri = ri vm }
 
 pop :: VMState -> Int -> VMState
 pop VMState{stack=[]} _ = error "Trying to pop an empty stack"
