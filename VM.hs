@@ -83,6 +83,8 @@ exit :: VMState -> VMState
 exit vm = VMState{stack = stack vm, registers = registers vm, close = True,  memory = memory vm, ri = ri vm}
 
 seek :: VMState -> Int -> VMState
-seek vm address = VMState{stack = stack vm, registers = registers vm, close = close vm,  memory = memory vm, ri = newRi}
+seek vm address 
+    | newRi > memSize vm = error ("Seeking out of bounds to " ++ show newRi)
+    | otherwise = VMState{stack = stack vm, registers = registers vm, close = close vm,  memory = memory vm, ri = newRi}
     where
         newRi = address * 2
