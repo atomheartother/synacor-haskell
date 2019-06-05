@@ -11,13 +11,14 @@ module VM(
     getVal,
     getVals,
     memSize,
-    seek
+    seek,
+    vmRead,
+    write
 ) where
 
 import Data.List
 import qualified Data.Sequence as S
 import qualified Data.Char as Char
-import Debug.Trace
 
 type Registers = S.Seq Int
 type Memory = S.Seq Char
@@ -31,7 +32,7 @@ data VMState = VMState {
     registers   :: Registers,   -- Registers is a Sequence of ints
     memory      :: Memory,      -- Memory represents the program loaded in the VM
     close       :: Bool,        -- Boolean representing whether or not we need to close the VM
-    ri          :: Int          -- Instruction pointer, value is the bytecount we're at in memory, not the address (which is bytecount/2)
+    ri          :: Int          -- Instruction pointer, value is the address, not the physical bytecount (which is address*2)
 }
 
 new :: [Char] -> VMState
@@ -40,11 +41,22 @@ new mem = VMState {stack = [], registers = S.replicate registerCount 0, memory =
 memSize :: VMState -> Int
 memSize vm = S.length $ memory vm
 
-getVal :: VMState -> (Int, VMState)
-getVal vm = (Char.ord hi * 256 + Char.ord lo, VMState{stack=stack vm, registers = registers vm, memory = memory vm, close = close vm, ri = (ri vm) + 2})
+-- Returns the physical position of ri in the buffer, in bytes
+riPos :: VMState -> Int
+riPos vm = (ri vm) * 2
+
+-- Read memory at address. Doesn't affect the vm
+vmRead :: VMState -> Int -> Int
+vmRead vm address = Char.ord hi * 256 + Char.ord lo
     where
-        lo = S.index (memory vm) $ ri vm
-        hi = S.index (memory vm) $ (ri vm) + 1
+        lo = S.index (memory vm) $ address * 2
+        hi = S.index (memory vm) $ address * 2 + 1
+
+-- Read a value over 2 bytes and move ri to the next address
+getVal :: VMState -> (Int, VMState)
+getVal vm = (val, VMState{stack=stack vm, registers = registers vm, memory = memory vm, close = close vm, ri = (ri vm) + 1})
+    where
+        val = vmRead vm (ri vm)
 
 getVals :: VMState -> Int -> ([Int], VMState)
 getVals vm 0 = ([], vm)
@@ -84,7 +96,13 @@ exit vm = VMState{stack = stack vm, registers = registers vm, close = True,  mem
 
 seek :: VMState -> Int -> VMState
 seek vm address 
-    | newRi > memSize vm = error ("Seeking out of bounds to " ++ show newRi)
-    | otherwise = VMState{stack = stack vm, registers = registers vm, close = close vm,  memory = memory vm, ri = newRi}
+    | (address * 2) > memSize vm = error ("Seeking out of bounds to " ++ show address)
+    | otherwise = VMState{stack = stack vm, registers = registers vm, close = close vm,  memory = memory vm, ri = address}
+
+-- Write to memory at address
+write :: VMState -> Int -> Int -> VMState
+write vm address val = VMState{stack = stack vm, registers = registers vm, close = close vm, memory = S.update (idx+1) hi $ S.update idx lo $ memory vm , ri = ri vm}
     where
-        newRi = address * 2
+        idx = address * 2
+        lo = Char.chr $ val `mod` 256
+        hi = Char.chr $ val `quot` 256

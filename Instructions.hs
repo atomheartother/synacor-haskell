@@ -37,10 +37,18 @@ opCodeToInstruction = Map.fromList [
         buildInstruction push 2 1,
         buildInstruction pop 3 1,
         buildInstruction eq 4 3,
+        buildInstruction gt 5 3,
         buildInstruction jmp 6 1,
         buildInstruction jt 7 2,
         buildInstruction jf 8 2,
         buildInstruction add 9 3,
+        buildInstruction mult 10 3,
+        buildInstruction myMod 11 3,
+        buildInstruction myAnd 12 3,
+        buildInstruction myOr 13 3,
+        buildInstruction myNot 14 2,
+        buildInstruction rmem 15 2,
+        buildInstruction wmem 16 2,
         buildInstruction out 19 1,
         buildInstruction noop 21 0
     ]

@@ -3,6 +3,7 @@ module ExecFunc(
     exit,
     set,
     eq,
+    gt,
     out,
     noop,
     jmp,
@@ -10,13 +11,19 @@ module ExecFunc(
     jf,
     add,
     push,
-    pop
+    pop,
+    mult,
+    myMod,
+    myAnd,
+    myOr,
+    myNot,
+    rmem,
+    wmem
 ) where
 
-import System.IO
-import Debug.Trace
 import qualified Data.Char as Char
 import qualified VM as VM
+import Data.Bits
 
 -- Typedef for exec functions
 type ExecFuncType = VM.VMState -> [Int] -> IO VM.VMState
@@ -38,14 +45,20 @@ push vm (x:xs) = return (VM.push vm a) where a = VM.rval vm x
 pop  :: ExecFuncType
 pop vm (x:xs) = return (VM.pop vm a) where a = VM.lval x
 
+compareVals :: (Int -> Int -> Bool) -> VM.VMState -> Int -> Int -> Int -> IO VM.VMState
+compareVals f vm x y z
+    | f b c = return (VM.set vm a 1)
+    | otherwise = return (VM.set vm a 0)
+    where
+        a = VM.lval x
+        b = VM.rval vm y
+        c = VM.rval vm z
+
 eq :: ExecFuncType
-eq vm (x:y:z:xs)
-        | b == c = return (VM.set vm a 1)
-        | otherwise = return vm
-        where
-            a = VM.lval x
-            b = VM.rval vm y
-            c = VM.rval vm z
+eq vm (x:y:z:xs) = compareVals (==) vm x y z
+
+gt :: ExecFuncType
+gt vm (x:y:z:xs) = compareVals (>) vm x y z
 
 seek :: VM.VMState -> Int -> VM.VMState
 seek vm address = VM.seek vm address
@@ -69,14 +82,49 @@ jf vm (x:xs)
     | val == 0 = jmp vm xs
     | otherwise = return vm
     where val = VM.rval vm x
-    
-add :: ExecFuncType
-add vm (x:y:z:xs) = return (VM.set vm a (b+c))
+
+-- Stores into x the result of b `f` c
+op :: (Int -> Int -> Int) -> VM.VMState -> Int -> Int -> Int -> IO VM.VMState
+op f vm x y z = return (VM.set vm a $ b `f` c)
     where
         a = VM.lval x
         b = VM.rval vm y
         c = VM.rval vm z
 
+add :: ExecFuncType
+add vm (x:y:z:xs) = op (+) vm x y z
+
+mult :: ExecFuncType
+mult vm (x:y:z:xs) = op (*) vm x y z
+
+myMod :: ExecFuncType
+myMod vm (x:y:z:xs) = op mod vm x y z
+
+myAnd :: ExecFuncType
+myAnd vm (x:y:z:xs) = op (.&.) vm x y z
+
+myOr :: ExecFuncType
+myOr vm (x:y:z:xs) = op (.|.) vm x y z
+
+myNot :: ExecFuncType
+myNot vm (x:y:xs) = return (VM.set vm a $ complement b)
+    where
+        a = VM.lval x
+        b = VM.rval vm y
+
+rmem :: ExecFuncType
+rmem vm (x:y:xs) = return (VM.set vm a memVal)
+    where
+        a = VM.lval x
+        b = VM.rval vm y
+        memVal = VM.vmRead vm b 
+
+wmem :: ExecFuncType
+wmem vm (x:y:xs) = return (VM.write vm a b)
+    where
+        a = VM.rval vm x
+        b = VM.rval vm y
+        
 out :: ExecFuncType
 out _ [] = error "out with no args"
 out vm (x:args) = do
