@@ -84,9 +84,9 @@ rval vm n
 set :: VMState -> Int -> Int -> VMState
 set vm reg val= VMState {stack = stack vm, registers = S.update reg (val `mod` maxIntSize) (registers vm), close = close vm, memory = memory vm , ri = ri vm }
 
-pop :: VMState -> Int -> VMState
-pop VMState{stack=[]} _ = error "Trying to pop an empty stack"
-pop VMState{stack=x:xs, registers=registers, close=close, ri=ri, memory=memory} reg = VMState{stack=xs, registers= S.update reg x registers, close = close, memory = memory, ri = ri}
+pop :: VMState -> (Int, VMState)
+pop VMState{stack=[]} = error "Trying to pop an empty stack"
+pop VMState{stack=x:xs, registers=registers, close=close, ri=ri, memory=memory} = (x, VMState{stack=xs, registers = registers, close = close, memory = memory, ri = ri})
 
 push :: VMState -> Int -> VMState
 push vm val = VMState{stack = val:stack vm, registers = registers vm, close = close vm,  memory = memory vm, ri = ri vm}

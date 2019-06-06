@@ -18,7 +18,9 @@ module ExecFunc(
     myOr,
     myNot,
     rmem,
-    wmem
+    wmem,
+    call,
+    ret
 ) where
 
 import qualified Data.Char as Char
@@ -43,7 +45,10 @@ push  :: ExecFuncType
 push vm (x:xs) = return (VM.push vm a) where a = VM.rval vm x
 
 pop  :: ExecFuncType
-pop vm (x:xs) = return (VM.pop vm a) where a = VM.lval x
+pop vm (x:xs) = return (VM.set newVm reg val)
+    where
+        reg = VM.lval x
+        (val, newVm) = VM.pop vm
 
 compareVals :: (Int -> Int -> Bool) -> VM.VMState -> Int -> Int -> Int -> IO VM.VMState
 compareVals f vm x y z
@@ -124,6 +129,15 @@ wmem vm (x:y:xs) = return (VM.write vm a b)
     where
         a = VM.rval vm x
         b = VM.rval vm y
+      
+call :: ExecFuncType
+call vm (x:xs) = return $ seek newVm address 
+    where
+        newVm = VM.push vm $ VM.ri vm
+        address = VM.rval vm x
+
+ret :: ExecFuncType
+ret vm _ = return $ seek newVm address where (address, newVm) = VM.pop vm
         
 out :: ExecFuncType
 out _ [] = error "out with no args"
