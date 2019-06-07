@@ -142,8 +142,9 @@ ret vm _ = return $ seek newVm address where (address, newVm) = VM.pop vm
 out :: ExecFuncType
 out _ [] = error "out with no args"
 out vm (x:args) = do
-    putChar $ Char.chr x
+    putChar $ Char.chr c
     return vm
+    where c = VM.rval vm x
 
 noop :: ExecFuncType
 noop vm _ = return vm
