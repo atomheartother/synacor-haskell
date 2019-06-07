@@ -20,12 +20,14 @@ module ExecFunc(
     rmem,
     wmem,
     call,
-    ret
+    ret,
+    readIn
 ) where
 
 import qualified Data.Char as Char
 import qualified VM as VM
 import Data.Bits
+import System.IO
 
 -- Typedef for exec functions
 type ExecFuncType = VM.VMState -> [Int] -> IO VM.VMState
@@ -145,6 +147,13 @@ out vm (x:args) = do
     putChar $ Char.chr c
     return vm
     where c = VM.rval vm x
+
+readIn :: ExecFuncType
+readIn vm (x:args) = do
+    hSetBuffering stdin NoBuffering 
+    c <- getChar
+    return $ VM.set vm reg (Char.ord c)
+    where reg = VM.rval vm x
 
 noop :: ExecFuncType
 noop vm _ = return vm

@@ -52,6 +52,7 @@ opCodeToInstruction = Map.fromList [
         buildInstruction call 17 1,
         buildInstruction ret 18 0,
         buildInstruction out 19 1,
+        buildInstruction readIn 20 1,
         buildInstruction noop 21 0
     ]
 
