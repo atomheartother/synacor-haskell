@@ -27,33 +27,33 @@ data Invocation = Invocation {
 }
 
 -- Helper function to build the instruction dict
-buildInstruction :: ExecFuncType -> Int -> Int -> (Int, Instruction)
-buildInstruction f opCode argCount = (opCode,  Instruction opCode argCount (\vm -> \args -> Invocation {op=opCode, vm=vm, args=args, exec = f vm args}))
+inst :: ExecFuncType -> Int -> Int -> (Int, Instruction)
+inst f opCode argCount = (opCode,  Instruction opCode argCount (\vm -> \args -> Invocation {op=opCode, vm=vm, args=args, exec = f vm args}))
 
 opCodeToInstruction :: Map.Map Int Instruction
 opCodeToInstruction = Map.fromList [
-        buildInstruction exit 0 0,
-        buildInstruction set 1 2,
-        buildInstruction push 2 1,
-        buildInstruction pop 3 1,
-        buildInstruction eq 4 3,
-        buildInstruction gt 5 3,
-        buildInstruction jmp 6 1,
-        buildInstruction jt 7 2,
-        buildInstruction jf 8 2,
-        buildInstruction add 9 3,
-        buildInstruction mult 10 3,
-        buildInstruction myMod 11 3,
-        buildInstruction myAnd 12 3,
-        buildInstruction myOr 13 3,
-        buildInstruction myNot 14 2,
-        buildInstruction rmem 15 2,
-        buildInstruction wmem 16 2,
-        buildInstruction call 17 1,
-        buildInstruction ret 18 0,
-        buildInstruction out 19 1,
-        buildInstruction readIn 20 1,
-        buildInstruction noop 21 0
+        inst exit 0 0,
+        inst set 1 2,
+        inst push 2 1,
+        inst pop 3 1,
+        inst eq 4 3,
+        inst gt 5 3,
+        inst jmp 6 1,
+        inst jt 7 2,
+        inst jf 8 2,
+        inst add 9 3,
+        inst mult 10 3,
+        inst myMod 11 3,
+        inst myAnd 12 3,
+        inst myOr 13 3,
+        inst myNot 14 2,
+        inst rmem 15 2,
+        inst wmem 16 2,
+        inst call 17 1,
+        inst ret 18 0,
+        inst out 19 1,
+        inst readIn 20 1,
+        inst noop 21 0
     ]
 
 -- Takes an instruction and a vm state and returns an invocation object

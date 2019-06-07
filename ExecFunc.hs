@@ -150,7 +150,6 @@ out vm (x:args) = do
 
 readIn :: ExecFuncType
 readIn vm (x:args) = do
-    hSetBuffering stdin NoBuffering 
     c <- getChar
     return $ VM.set vm reg (Char.ord c)
     where reg = VM.rval vm x
