@@ -151,8 +151,8 @@ out vm (x:args) = do
 readIn :: ExecFuncType
 readIn vm (x:args) = do
     c <- getChar
-    return $ VM.set vm reg (Char.ord c)
-    where reg = VM.rval vm x
+    return (VM.set vm reg (Char.ord c))
+    where reg = VM.lval x
 
 noop :: ExecFuncType
 noop vm _ = return vm

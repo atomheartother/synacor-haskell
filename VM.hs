@@ -82,7 +82,9 @@ rval vm n
     
 -- Set a register value
 set :: VMState -> Int -> Int -> VMState
-set vm reg val= VMState {stack = stack vm, registers = S.update reg (val `mod` maxIntSize) (registers vm), close = close vm, memory = memory vm , ri = ri vm }
+set vm reg val
+    | reg >= registerCount = error ("Trying to set invalid register: " ++ show reg)
+    | True = VMState {stack = stack vm, registers = S.update reg (val `mod` maxIntSize) (registers vm), close = close vm, memory = memory vm , ri = ri vm }
 
 pop :: VMState -> (Int, VMState)
 pop VMState{stack=[]} = error "Trying to pop an empty stack"
